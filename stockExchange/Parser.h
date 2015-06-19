@@ -24,22 +24,17 @@ class Parser
 		bool isValidHeader(int pos, int & endpos);
 		bool isValidOrderNonAckMsg(int pos, int &endpos, bool &isOrderEntry, int & bodylen);
 		bool isValidOrderAckMsg(int pos, int &endpos);
-		bool isPos4HeaderMarker(int pos);
 		
 		void parseOrderEntryMsg(int pos);
 		void parseOrderAckMsg(int pos);
 		void parseOrderFillMsg(int pos);
 		void parserHeader(int pos);
-		void parserGenericPacket(int pos, int &endpos);
 
 		void initData();
 
 	public:
 		Parser(const std::string & filename, DataStore* datastore);
-
-		~Parser()
-		{
-		}
+		~Parser();
 
 		void ParseFile();
 };

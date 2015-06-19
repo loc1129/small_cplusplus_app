@@ -4,7 +4,7 @@
 
 void DataStore::logWarn(const std::string & msg)
 {
-	std::cout << "WARN: " << msg << std::endl;
+	//std::cout << "WARN: " << msg << std::endl;
 }
 
 void DataStore::UpdateClientId2Info(uint64_t clientId, const std::string & instrument, const std::string & tag)

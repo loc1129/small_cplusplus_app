@@ -9,22 +9,22 @@ int main(int argc, char*argv[])
 {
 	if(argc != 2)
 	{
-		std::cout << "please enter the file name" << std::endl;
+		//std::cout << "please enter the file name" << std::endl;
 		return 1;
 	}
 
-	std::cout << "the file name is: " << argv[1] << std::endl;
+	//std::cout << "the file name is: " << argv[1] << std::endl;
 
 	DataStore * data = new DataStore();
 	if(!data)
 	{
-		std::cout << "memory out" << std::endl;
+		//std::cout << "memory out" << std::endl;
 		return 1;
 	}
 	Parser * parser = new Parser(std::string(argv[1]), data);
 	if(!parser)
 	{
-		std::cout << "memory out" << std::endl;
+		//std::cout << "memory out" << std::endl;
 		delete data;
 		return 1;
 	}
@@ -38,7 +38,7 @@ int main(int argc, char*argv[])
 				 data->GetMostLiquidityTraderTag() << ", " <<
 				 data->GetVolumePerInstrument() << std::endl;
 
-	std::cout << data->dump() << std::endl;
+	//std::cout << data->dump() << std::endl;
 
 	delete parser;
 	delete data;

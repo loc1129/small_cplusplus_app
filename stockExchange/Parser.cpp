@@ -27,6 +27,14 @@ Parser::Parser(const std::string & filename, DataStore* datastore):
 	ParseFile();
 }
 
+Parser::~Parser()
+{
+	if(mData)
+	{
+		delete mData;
+	}
+}
+
 void Parser::logWarn(const std::string & msg)
 {
 	//std::cout << "WARN: " << msg << std::endl;
@@ -96,68 +104,38 @@ void Parser::ParseFile()
 		{
 			parseOrderAckMsg(pos);	
 		}
-		else
+		else if(isValidHeader(pos, endpos))
 		{
-			parserGenericPacket(pos+1, endpos);	
+			parserHeader(pos);	
 		}
 
 		pos = endpos + 1;
 	}
 }
 
-bool Parser::isPos4HeaderMarker(int pos)
-{
-	if(pos + 1 < mDataSize)
-	{
-		return ((mData[pos] == 'S') && (mData[pos+1] == 'T'));	
-	}
-
-	return false;
-}
-
-void Parser::parserGenericPacket(int pos, int &endpos)
-{
-	while(pos < mDataSize)
-	{
-		if(isPos4HeaderMarker(pos))
-		{
-			endpos = pos - 1;
-			break;
-		}
-		else
-		{
-			pos = pos + 1;
-		}
-	}
-	mDataStore->IncreasePacketNum();
-}
-
 uint16_t Parser::htons_ld(uint16_t little_endian_value)
 {
-	return little_endian_value;
-	//return ((little_endian_value & 0xff00) >> 8) | ((little_endian_value & 0x00ff) << 8);
+	return ((little_endian_value & 0xff00) >> 8) | ((little_endian_value & 0x00ff) << 8);
 }
 
 uint32_t Parser::htonl_ld(uint32_t little_endian_value)
 {
-	return little_endian_value;
-	//return 	(((little_endian_value & 0xff000000) >> 24) | 
-			//((little_endian_value & 0x00ff0000) >> 8) | 
-			//((little_endian_value & 0x0000ff00) << 8) |
-			//((little_endian_value & 0x000000ff) << 24));
+	return 	(((little_endian_value & 0xff000000) >> 24) | 
+			((little_endian_value & 0x00ff0000) >> 8) | 
+			((little_endian_value & 0x0000ff00) << 8) |
+			((little_endian_value & 0x000000ff) << 24));
 }
 
 uint64_t Parser::htonll_ld(uint64_t little_endian_value)
 {
-	return little_endian_value;
-	//return 	(((little_endian_value & 0xff00000000000000) >> 56) | 
-			//((little_endian_value & 0x00ff000000000000) >> 40) | 
-			//((little_endian_value & 0x0000ff0000000000) >> 24) |
-			//((little_endian_value & 0x000000ff00000000) >> 8)|
-			//((little_endian_value & 0x00000000ff000000) << 8) | 
-			//((little_endian_value & 0x0000000000ff0000) << 24) | 
-			//((little_endian_value & 0x000000000000ff00) << 40) |
-			//((little_endian_value & 0x00000000000000ff) << 56));
+	return 	(((little_endian_value & 0xff00000000000000) >> 56) | 
+			((little_endian_value & 0x00ff000000000000) >> 40) | 
+			((little_endian_value & 0x0000ff0000000000) >> 24) |
+			((little_endian_value & 0x000000ff00000000) >> 8)|
+			((little_endian_value & 0x00000000ff000000) << 8) | 
+			((little_endian_value & 0x0000000000ff0000) << 24) | 
+			((little_endian_value & 0x000000000000ff00) << 40) |
+			((little_endian_value & 0x00000000000000ff) << 56));
 }
 
 bool Parser::isValidHeader(int pos, int & endpos)
@@ -167,9 +145,15 @@ bool Parser::isValidHeader(int pos, int & endpos)
 		return false;
 	}
 
-	if(isPos4HeaderMarker(pos))
+	if((mData[pos] == 'S') && (mData[pos+1] == 'T'))
 	{
-		endpos = pos + mHeaderSize - 1;
+		uint16_t msglen_ld = 0;
+		int size4msglen = sizeof(uint16_t);
+		int pos4msglen = pos + (mHeaderSize - size4msglen);
+		mymemcpy((char*)&msglen_ld, &(mData[pos4msglen]), size4msglen);
+		uint16_t msglen = htons_ld(msglen_ld);
+
+		endpos = pos + mHeaderSize + msglen - 1;
 		return true;
 	}
 
@@ -366,14 +350,5 @@ void Parser::parseOrderFillMsg(int pos)
 
 void Parser::parserHeader(int pos)
 {
-	int size4marker = sizeof(uint16_t);
-	int size4msgtype = sizeof(uint8_t);
-	int size4id = sizeof(uint64_t);
-
-	uint64_t id_ld = 0;
-	int pos4id = pos + size4marker + size4msgtype;
-	mymemcpy((char*)&id_ld, &(mData[pos4id]), size4id);
-	uint64_t id = htonll_ld(id_ld);
-
 	mDataStore->IncreasePacketNum();
 }
